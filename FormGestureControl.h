@@ -52,8 +52,11 @@ namespace demoktlt {
 	// Thêm thành phần SerialPort
 	private:
 		SerialPort^ serialPort;
+		String^ receivedData;
 	private: System::Windows::Forms::Timer^ timer1;
 	private: System::Windows::Forms::Label^ label1;
+	private: System::Windows::Forms::Label^ label2;
+	private: System::Windows::Forms::PictureBox^ pictureBox2;
 	private: System::ComponentModel::IContainer^ components;
 	private:
 		/// <summary>
@@ -69,6 +72,7 @@ namespace demoktlt {
 		void InitializeComponent(void)
 		{
 			this->components = (gcnew System::ComponentModel::Container());
+			System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(FormGestureControl::typeid));
 			this->pictureBox1 = (gcnew System::Windows::Forms::PictureBox());
 			this->button1 = (gcnew System::Windows::Forms::Button());
 			this->comboBox1 = (gcnew System::Windows::Forms::ComboBox());
@@ -76,7 +80,10 @@ namespace demoktlt {
 			this->labelStatus = (gcnew System::Windows::Forms::Label());
 			this->timer1 = (gcnew System::Windows::Forms::Timer(this->components));
 			this->label1 = (gcnew System::Windows::Forms::Label());
+			this->label2 = (gcnew System::Windows::Forms::Label());
+			this->pictureBox2 = (gcnew System::Windows::Forms::PictureBox());
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox1))->BeginInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox2))->BeginInit();
 			this->SuspendLayout();
 			// 
 			// pictureBox1
@@ -102,7 +109,7 @@ namespace demoktlt {
 			// comboBox1
 			// 
 			this->comboBox1->FormattingEnabled = true;
-			this->comboBox1->Location = System::Drawing::Point(735, 116);
+			this->comboBox1->Location = System::Drawing::Point(763, 144);
 			this->comboBox1->Name = L"comboBox1";
 			this->comboBox1->Size = System::Drawing::Size(121, 24);
 			this->comboBox1->TabIndex = 2;
@@ -110,9 +117,11 @@ namespace demoktlt {
 			// buttonConnect
 			// 
 			this->buttonConnect->BackColor = System::Drawing::Color::Red;
-			this->buttonConnect->Location = System::Drawing::Point(740, 91);
+			this->buttonConnect->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10.2F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(163)));
+			this->buttonConnect->Location = System::Drawing::Point(763, 92);
 			this->buttonConnect->Name = L"buttonConnect";
-			this->buttonConnect->Size = System::Drawing::Size(75, 23);
+			this->buttonConnect->Size = System::Drawing::Size(121, 46);
 			this->buttonConnect->TabIndex = 3;
 			this->buttonConnect->Text = L"Connect";
 			this->buttonConnect->UseVisualStyleBackColor = false;
@@ -136,17 +145,43 @@ namespace demoktlt {
 			// label1
 			// 
 			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(477, 18);
+			this->label1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 10.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(163)));
+			this->label1->Location = System::Drawing::Point(760, 36);
 			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(55, 16);
+			this->label1->Size = System::Drawing::Size(76, 22);
 			this->label1->TabIndex = 5;
 			this->label1->Text = L"Angle: 0";
+			// 
+			// label2
+			// 
+			this->label2->AutoSize = true;
+			this->label2->BackColor = System::Drawing::SystemColors::ActiveCaption;
+			this->label2->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 13.8F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+				static_cast<System::Byte>(163)));
+			this->label2->Location = System::Drawing::Point(354, 9);
+			this->label2->Name = L"label2";
+			this->label2->Size = System::Drawing::Size(269, 29);
+			this->label2->TabIndex = 6;
+			this->label2->Text = L"GESTURE CONTROL";
+			// 
+			// pictureBox2
+			// 
+			this->pictureBox2->Image = (cli::safe_cast<System::Drawing::Image^>(resources->GetObject(L"pictureBox2.Image")));
+			this->pictureBox2->Location = System::Drawing::Point(794, 532);
+			this->pictureBox2->Name = L"pictureBox2";
+			this->pictureBox2->Size = System::Drawing::Size(158, 140);
+			this->pictureBox2->SizeMode = System::Windows::Forms::PictureBoxSizeMode::Zoom;
+			this->pictureBox2->TabIndex = 7;
+			this->pictureBox2->TabStop = false;
 			// 
 			// FormGestureControl
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(946, 669);
+			this->Controls->Add(this->pictureBox2);
+			this->Controls->Add(this->label2);
 			this->Controls->Add(this->label1);
 			this->Controls->Add(this->labelStatus);
 			this->Controls->Add(this->buttonConnect);
@@ -157,6 +192,7 @@ namespace demoktlt {
 			this->Text = L"FormGestureControl";
 			this->Load += gcnew System::EventHandler(this, &FormGestureControl::FormGestureControl_Load);
 			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox1))->EndInit();
+			(cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBox2))->EndInit();
 			this->ResumeLayout(false);
 			this->PerformLayout();
 
@@ -316,29 +352,59 @@ namespace demoktlt {
 			labelStatus->Text = "Error: " + ex->Message;
 		}
 	}
-		   // Xử lý dữ liệu nhận từ Serial (góc từ Arduino) // Co the hoi ^^
+	//private: System::Void SerialPort_DataReceived(System::Object^ sender, SerialDataReceivedEventArgs^ e) {
+	//	try {
+	//		String^ data = serialPort->ReadLine(); // Đọc dòng dữ liệu từ Arduino
+	//		if (data->StartsWith("ANGLE:")) {
+	//			String^ angleStr = data->Substring(6); // Lấy phần sau "ANGLE:"
+	//			double angle;
+	//			if (Double::TryParse(angleStr, angle)) {
+	//				// Cập nhật label1 trên luồng giao diện
+	//				this->BeginInvoke(gcnew Action<double>(this, &FormGestureControl::UpdateAngleLabel), angle);
+	//			}
+	//		}
+	//	}
+	//	catch (Exception^ ex) {
+	//		// Log the exception message to the label or debug output
+	//		Debug::WriteLine("Exception caught: " + ex->Message);
+	//		labelStatus->Text = "Error: " + ex->Message; // Update the label with the error message
+	//	}
+
+	//}
+	//	   // Cập nhật giá trị góc lên label1
+	//private: System::Void UpdateAngleLabel(double angle) {
+	//	label1->Text = "Angle: " + angle.ToString("F2"); // Hiển thị với 1 chữ số thập phân
+	//}
+
 	private: System::Void SerialPort_DataReceived(System::Object^ sender, SerialDataReceivedEventArgs^ e) {
 		try {
-			String^ data = serialPort->ReadLine(); // Đọc dòng dữ liệu từ Arduino
-			if (data->StartsWith("ANGLE:")) {
-				String^ angleStr = data->Substring(6); // Lấy phần sau "ANGLE:"
-				double angle;
-				if (Double::TryParse(angleStr, angle)) {
-					// Cập nhật label1 trên luồng giao diện
-					this->BeginInvoke(gcnew Action<double>(this, &FormGestureControl::UpdateAngleLabel), angle);
+			String^ data = serialPort->ReadExisting();
+			receivedData += data;
+
+			int newLineIndex;
+			while ((newLineIndex = receivedData->IndexOf('\n')) != -1) {
+				String^ line = receivedData->Substring(0, newLineIndex)->Trim();
+				receivedData = receivedData->Substring(newLineIndex + 1);
+
+				if (line->StartsWith("ANGLE:")) {
+					String^ angleStr = line->Substring(6);
+					double angle;
+					if (Double::TryParse(angleStr, angle)) {
+						this->BeginInvoke(gcnew Action<double>(this, &FormGestureControl::UpdateAngleLabel), angle);
+
+					}
 				}
 			}
 		}
 		catch (Exception^ ex) {
-			// Log the exception message to the label or debug output
-			Debug::WriteLine("Exception caught: " + ex->Message);
-			labelStatus->Text = "Error: " + ex->Message; // Update the label with the error message
+			Console::WriteLine("Exception occurred: " + ex->Message);
 		}
-
 	}
-		   // Cập nhật giá trị góc lên label1
+
+
+
 	private: System::Void UpdateAngleLabel(double angle) {
-		label1->Text = "Angle: " + angle.ToString("F2"); // Hiển thị với 1 chữ số thập phân
+		label1->Text = "Angle: " + angle.ToString("F2"); // Hiển thị với 2 chữ số thập phân
 	}
 
 		   // Xử lý sự kiện khi nhấn nút Connect
@@ -356,7 +422,7 @@ namespace demoktlt {
 			}
 
 			String^ selectedPort = comboBox1->SelectedItem->ToString();
-			serialPort = gcnew SerialPort(selectedPort, 9600); // Tốc độ baud rate 9600
+			serialPort = gcnew SerialPort(selectedPort,115200); 
 			serialPort->DataReceived += gcnew SerialDataReceivedEventHandler(this, &FormGestureControl::SerialPort_DataReceived);
 			serialPort->ReadTimeout = 500; // Thời gian timeout đọc
 			serialPort->Open();
