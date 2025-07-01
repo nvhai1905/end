@@ -1,0 +1,117 @@
+private: 
+		void FormButtonControl_Load(System::Object^ sender, System::EventArgs^ e) {
+			serialPort = gcnew SerialPort("COM5", 115200); // thay COM5 bằng cổng thực tế
+			try {
+				serialPort->Open();
+			}
+			catch (Exception^ ex) {
+				MessageBox::Show("Error opening port: " + ex->Message);
+			}
+		}
+
+	private: 
+		void buttonF_Click(System::Object^ sender, System::EventArgs^ e) {
+			if (serialPort != nullptr && serialPort->IsOpen) {
+				serialPort->WriteLine("F");
+			}
+// chỉ chọn tiến
+#pragma once
+
+namespace demoktlt {
+
+	using namespace System;
+	using namespace System::Windows::Forms;
+	using namespace System::IO::Ports;
+	using namespace System;
+
+	public ref class FormButtonControl : public Form
+	{
+	public:
+		FormButtonControl(void)
+		{
+			InitializeComponent();
+		}
+
+	protected:
+		~FormButtonControl()
+		{
+			if (components) {
+				delete components;
+			}
+		}
+
+	private:
+		Label^ labelAngle;
+		SerialPort^ serialPort;
+		String^ receivedData;
+		System::ComponentModel::Container^ components;
+
+#pragma region Windows Form Designer generated code
+		void InitializeComponent(void)
+		{
+			this->labelAngle = (gcnew Label());
+			this->SuspendLayout();
+			// 
+			// labelAngle
+			// 
+			this->labelAngle->AutoSize = true;
+			this->labelAngle->Font = gcnew Drawing::Font(L"Microsoft Sans Serif", 14);
+			this->labelAngle->Location = System::Drawing::Point(50, 50);
+			this->labelAngle->Name = L"labelAngle";
+			this->labelAngle->Text = L"Angle: 0.00";
+			// 
+			// FormButtonControl
+			// 
+			this->ClientSize = System::Drawing::Size(300, 150);
+			this->Controls->Add(this->labelAngle);
+			this->Name = L"FormButtonControl";
+			this->Text = L"Display Angle";
+			this->Load += gcnew EventHandler(this, &FormButtonControl::FormButtonControl_Load);
+			this->ResumeLayout(false);
+			this->PerformLayout();
+		}
+#pragma endregion
+
+	private:
+		void FormButtonControl_Load(System::Object^ sender, System::EventArgs^ e) {
+			serialPort = gcnew SerialPort("COM5", 115200); // thay COM5 bằng cổng thực tế
+			serialPort->DataReceived += gcnew SerialDataReceivedEventHandler(this, &FormButtonControl::SerialPort_DataReceived);
+			serialPort->ReadTimeout = 500;
+			try {
+				serialPort->Open();
+			}
+			catch (Exception^ ex) {
+				MessageBox::Show("Error opening port: " + ex->Message);
+			}
+		}
+
+		void SerialPort_DataReceived(System::Object^ sender, SerialDataReceivedEventArgs^ e) {
+			try {
+				String^ data = serialPort->ReadExisting();
+				receivedData += data;
+
+				int newLineIndex;
+				while ((newLineIndex = receivedData->IndexOf('\n')) != -1) {
+					String^ line = receivedData->Substring(0, newLineIndex)->Trim();
+					receivedData = receivedData->Substring(newLineIndex + 1);
+
+					if (line->StartsWith("ANGLE:")) {
+						String^ angleStr = line->Substring(6);
+						double angle;
+						if (Double::TryParse(angleStr, angle)) {
+							this->BeginInvoke(gcnew Action<double>(this, &FormButtonControl::UpdateAngleLabel), angle);
+						}
+					}
+				}
+			}
+			catch (Exception^ ex) {
+				Console::WriteLine("Serial read error: " + ex->Message);
+			}
+		}
+
+		void UpdateAngleLabel(double angle) {
+			labelAngle->Text = "Angle: " + angle.ToString("F2");
+		}
+	};
+}
+// chỉ góc 
